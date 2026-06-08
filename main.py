@@ -105,6 +105,26 @@ class DataExporter:
                 assim_html = self.export_figure(assim_fig, f"{report_name}_assimilation.html")
                 results['assimilation_plot'] = assim_html
 
+            fig_3d_ts = visualizer.create_3d_ts_scatter(df)
+            html_3d_ts = self.export_figure(fig_3d_ts, f"{report_name}_3d_ts_scatter.html")
+            results['3d_ts_scatter'] = html_3d_ts
+
+            fig_3d_temp = visualizer.create_3d_temperature_volume(df)
+            html_3d_temp = self.export_figure(fig_3d_temp, f"{report_name}_3d_temp_volume.html")
+            results['3d_temp_volume'] = html_3d_temp
+
+            fig_3d_sal = visualizer.create_3d_salinity_volume(df)
+            html_3d_sal = self.export_figure(fig_3d_sal, f"{report_name}_3d_salinity_volume.html")
+            results['3d_salinity_volume'] = html_3d_sal
+
+            fig_3d_current = visualizer.create_3d_current_vectors(df)
+            html_3d_current = self.export_figure(fig_3d_current, f"{report_name}_3d_current_vectors.html")
+            results['3d_current_vectors'] = html_3d_current
+
+            fig_3d_dashboard = visualizer.create_3d_dashboard(df)
+            html_3d_dashboard = self.export_figure(fig_3d_dashboard, f"{report_name}_3d_dashboard.html")
+            results['3d_dashboard'] = html_3d_dashboard
+
         if quality_summary:
             qc_path = self.export_quality_report(quality_summary, f"{report_name}_quality_report.json")
             results['quality_report'] = qc_path
@@ -116,9 +136,9 @@ class DataExporter:
 
 
 class OceanBuoySystem:
-    def __init__(self, use_simulation=True):
+    def __init__(self, use_simulation=True, assimilation_method='optimal'):
         self.fetcher = BuoyDataFetcher(use_simulation=use_simulation)
-        self.quality_controller = QualityController()
+        self.quality_controller = QualityController(assimilation_method=assimilation_method)
         self.visualizer = OceanVisualizer()
         self.alert_manager = AlertManager()
         self.exporter = DataExporter()
@@ -127,6 +147,7 @@ class OceanBuoySystem:
         self.current_qc_data = None
         self.quality_summary = None
         self.mode = 'offline'
+        self.assimilation_method = assimilation_method
 
     def run_offline_analysis(self, filepath=None, buoy_id=None):
         print("=" * 60)
