@@ -1,12 +1,12 @@
 {
   "total_points": 100,
-  "good_count": "95",
-  "suspect_count": "5",
+  "good_count": "99",
+  "suspect_count": "1",
   "bad_count": "0",
   "missing_count": "0",
-  "assimilated_count": "5",
-  "good_percentage": 95.0,
-  "suspect_percentage": 5.0,
+  "assimilated_count": "1",
+  "good_percentage": 99.0,
+  "suspect_percentage": 1.0,
   "bad_percentage": 0.0,
   "assimilation_stats": {
     "temperature_rmse": NaN,
@@ -15,6 +15,6 @@
     "salinity_bias": NaN,
     "current_speed_rmse": NaN,
     "current_speed_bias": NaN,
-    "mean_confidence": 0.97
+    "mean_confidence": 0.975
   }
 }

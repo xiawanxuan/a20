@@ -1,0 +1,202 @@
+{
+  "46001": {
+    "total_points": 100,
+    "good_count": "98",
+    "suspect_count": "2",
+    "bad_count": "0",
+    "missing_count": "0",
+    "assimilated_count": "2",
+    "good_percentage": 98.0,
+    "suspect_percentage": 2.0,
+    "bad_percentage": 0.0,
+    "assimilation_stats": {
+      "temperature_rmse": NaN,
+      "temperature_bias": NaN,
+      "salinity_rmse": NaN,
+      "salinity_bias": NaN,
+      "current_speed_rmse": NaN,
+      "current_speed_bias": NaN,
+      "mean_confidence": 0.975
+    }
+  },
+  "46002": {
+    "total_points": 100,
+    "good_count": "97",
+    "suspect_count": "3",
+    "bad_count": "0",
+    "missing_count": "0",
+    "assimilated_count": "3",
+    "good_percentage": 97.0,
+    "suspect_percentage": 3.0,
+    "bad_percentage": 0.0,
+    "assimilation_stats": {
+      "temperature_rmse": NaN,
+      "temperature_bias": NaN,
+      "salinity_rmse": NaN,
+      "salinity_bias": NaN,
+      "current_speed_rmse": NaN,
+      "current_speed_bias": NaN,
+      "mean_confidence": 0.975
+    }
+  },
+  "41001": {
+    "total_points": 100,
+    "good_count": "96",
+    "suspect_count": "4",
+    "bad_count": "0",
+    "missing_count": "0",
+    "assimilated_count": "4",
+    "good_percentage": 96.0,
+    "suspect_percentage": 4.0,
+    "bad_percentage": 0.0,
+    "assimilation_stats": {
+      "temperature_rmse": NaN,
+      "temperature_bias": NaN,
+      "salinity_rmse": NaN,
+      "salinity_bias": NaN,
+      "current_speed_rmse": NaN,
+      "current_speed_bias": NaN,
+      "mean_confidence": 0.975
+    }
+  },
+  "42001": {
+    "total_points": 100,
+    "good_count": "100",
+    "suspect_count": "0",
+    "bad_count": "0",
+    "missing_count": "0",
+    "assimilated_count": "0",
+    "good_percentage": 100.0,
+    "suspect_percentage": 0.0,
+    "bad_percentage": 0.0,
+    "assimilation_stats": {
+      "temperature_rmse": NaN,
+      "temperature_bias": NaN,
+      "salinity_rmse": NaN,
+      "salinity_bias": NaN,
+      "current_speed_rmse": NaN,
+      "current_speed_bias": NaN,
+      "mean_confidence": 0.975
+    }
+  },
+  "44004": {
+    "total_points": 100,
+    "good_count": "92",
+    "suspect_count": "8",
+    "bad_count": "0",
+    "missing_count": "0",
+    "assimilated_count": "8",
+    "good_percentage": 92.0,
+    "suspect_percentage": 8.0,
+    "bad_percentage": 0.0,
+    "assimilation_stats": {
+      "temperature_rmse": NaN,
+      "temperature_bias": NaN,
+      "salinity_rmse": NaN,
+      "salinity_bias": NaN,
+      "current_speed_rmse": NaN,
+      "current_speed_bias": NaN,
+      "mean_confidence": 0.975
+    }
+  },
+  "44007": {
+    "total_points": 100,
+    "good_count": "95",
+    "suspect_count": "5",
+    "bad_count": "0",
+    "missing_count": "0",
+    "assimilated_count": "5",
+    "good_percentage": 95.0,
+    "suspect_percentage": 5.0,
+    "bad_percentage": 0.0,
+    "assimilation_stats": {
+      "temperature_rmse": NaN,
+      "temperature_bias": NaN,
+      "salinity_rmse": NaN,
+      "salinity_bias": NaN,
+      "current_speed_rmse": NaN,
+      "current_speed_bias": NaN,
+      "mean_confidence": 0.975
+    }
+  },
+  "46006": {
+    "total_points": 100,
+    "good_count": "97",
+    "suspect_count": "3",
+    "bad_count": "0",
+    "missing_count": "0",
+    "assimilated_count": "3",
+    "good_percentage": 97.0,
+    "suspect_percentage": 3.0,
+    "bad_percentage": 0.0,
+    "assimilation_stats": {
+      "temperature_rmse": NaN,
+      "temperature_bias": NaN,
+      "salinity_rmse": NaN,
+      "salinity_bias": NaN,
+      "current_speed_rmse": NaN,
+      "current_speed_bias": NaN,
+      "mean_confidence": 0.975
+    }
+  },
+  "46012": {
+    "total_points": 100,
+    "good_count": "92",
+    "suspect_count": "8",
+    "bad_count": "0",
+    "missing_count": "0",
+    "assimilated_count": "8",
+    "good_percentage": 92.0,
+    "suspect_percentage": 8.0,
+    "bad_percentage": 0.0,
+    "assimilation_stats": {
+      "temperature_rmse": NaN,
+      "temperature_bias": NaN,
+      "salinity_rmse": NaN,
+      "salinity_bias": NaN,
+      "current_speed_rmse": NaN,
+      "current_speed_bias": NaN,
+      "mean_confidence": 0.975
+    }
+  },
+  "41046": {
+    "total_points": 100,
+    "good_count": "99",
+    "suspect_count": "1",
+    "bad_count": "0",
+    "missing_count": "0",
+    "assimilated_count": "1",
+    "good_percentage": 99.0,
+    "suspect_percentage": 1.0,
+    "bad_percentage": 0.0,
+    "assimilation_stats": {
+      "temperature_rmse": NaN,
+      "temperature_bias": NaN,
+      "salinity_rmse": NaN,
+      "salinity_bias": NaN,
+      "current_speed_rmse": NaN,
+      "current_speed_bias": NaN,
+      "mean_confidence": 0.975
+    }
+  },
+  "42039": {
+    "total_points": 100,
+    "good_count": "96",
+    "suspect_count": "4",
+    "bad_count": "0",
+    "missing_count": "0",
+    "assimilated_count": "4",
+    "good_percentage": 96.0,
+    "suspect_percentage": 4.0,
+    "bad_percentage": 0.0,
+    "assimilation_stats": {
+      "temperature_rmse": NaN,
+      "temperature_bias": NaN,
+      "salinity_rmse": NaN,
+      "salinity_bias": NaN,
+      "current_speed_rmse": NaN,
+      "current_speed_bias": NaN,
+      "mean_confidence": 0.975
+    }
+  }
+}

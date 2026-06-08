@@ -939,6 +939,300 @@ class OceanVisualizer:
 
         return fig
 
+    def create_thermocline_plot(self, data, analysis_results=None, buoy_id=None):
+        from ocean_analysis import OceanAnalyzer
+        df = self._extract_single_buoy(data, buoy_id)
+        buoy_name = df['buoy_name'].iloc[0] if 'buoy_name' in df.columns else buoy_id
+
+        analyzer = OceanAnalyzer()
+        if analysis_results is None:
+            analysis_results = analyzer.analyze_profile(df)
+
+        thermocline = analysis_results.get('thermocline', {})
+
+        fig = go.Figure()
+
+        temp_col = 'temperature_assimilated' if 'temperature_assimilated' in df.columns else 'temperature'
+        fig.add_trace(go.Scatter(
+            x=df[temp_col],
+            y=df['depth'],
+            mode='lines+markers',
+            name='Temperature',
+            line=dict(color='red', width=2),
+            marker=dict(size=4),
+        ))
+
+        if thermocline.get('found', False):
+            fig.add_vline(
+                x=df[temp_col].iloc[0] if thermocline['depth'] > df['depth'].max() else df[temp_col].iloc[0],
+                line_dash="dash",
+            )
+            fig.add_hline(
+                y=thermocline['depth'],
+                line_dash="dash",
+                line_color="orange",
+                annotation_text=f"Thermocline: {thermocline['depth']:.0f}m ({thermocline['strength'].replace('_', ' ')})",
+                annotation_position="bottom right",
+            )
+            fig.add_hrect(
+                y0=thermocline['top_depth'],
+                y1=thermocline['bottom_depth'],
+                fillcolor="orange",
+                opacity=0.2,
+                layer="below",
+                line_width=0,
+            )
+
+        fig.update_layout(
+            title=f'Temperature Profile with Thermocline - {buoy_name}',
+            xaxis_title='Temperature (°C)',
+            yaxis_title='Depth (m)',
+            yaxis=dict(autorange='reversed'),
+            template=self.template,
+            height=600,
+        )
+
+        return fig
+
+    def create_halocline_plot(self, data, analysis_results=None, buoy_id=None):
+        from ocean_analysis import OceanAnalyzer
+        df = self._extract_single_buoy(data, buoy_id)
+        buoy_name = df['buoy_name'].iloc[0] if 'buoy_name' in df.columns else buoy_id
+
+        analyzer = OceanAnalyzer()
+        if analysis_results is None:
+            analysis_results = analyzer.analyze_profile(df)
+
+        halocline = analysis_results.get('halocline', {})
+
+        fig = go.Figure()
+
+        sal_col = 'salinity_assimilated' if 'salinity_assimilated' in df.columns else 'salinity'
+        fig.add_trace(go.Scatter(
+            x=df[sal_col],
+            y=df['depth'],
+            mode='lines+markers',
+            name='Salinity',
+            line=dict(color='blue', width=2),
+            marker=dict(size=4),
+        ))
+
+        if halocline.get('found', False):
+            fig.add_hline(
+                y=halocline['depth'],
+                line_dash="dash",
+                line_color="cyan",
+                annotation_text=f"Halocline: {halocline['depth']:.0f}m ({halocline['strength'].replace('_', ' ')})",
+                annotation_position="bottom right",
+            )
+            fig.add_hrect(
+                y0=halocline['top_depth'],
+                y1=halocline['bottom_depth'],
+                fillcolor="cyan",
+                opacity=0.2,
+                layer="below",
+                line_width=0,
+            )
+
+        fig.update_layout(
+            title=f'Salinity Profile with Halocline - {buoy_name}',
+            xaxis_title='Salinity (PSU)',
+            yaxis_title='Depth (m)',
+            yaxis=dict(autorange='reversed'),
+            template=self.template,
+            height=600,
+        )
+
+        return fig
+
+    def create_stratification_plot(self, data, analysis_results=None, buoy_id=None):
+        from ocean_analysis import OceanAnalyzer
+        df = self._extract_single_buoy(data, buoy_id)
+        buoy_name = df['buoy_name'].iloc[0] if 'buoy_name' in df.columns else buoy_id
+
+        analyzer = OceanAnalyzer()
+        if analysis_results is None:
+            analysis_results = analyzer.analyze_profile(df)
+
+        pycnocline = analysis_results.get('pycnocline', {})
+        mld = analysis_results.get('mixed_layer_depth', {})
+
+        fig = go.Figure()
+
+        if pycnocline.get('found', False) and 'buoyancy_frequency' in pycnocline:
+            depths = df['depth'].values
+            n2 = np.array(pycnocline['buoyancy_frequency'])
+
+            fig.add_trace(go.Scatter(
+                x=n2,
+                y=depths,
+                mode='lines',
+                name='Buoyancy Frequency (N)',
+                line=dict(color='purple', width=2),
+                fill='tozerox',
+            ))
+
+            if pycnocline.get('found', False):
+                fig.add_hline(
+                    y=pycnocline['depth'],
+                    line_dash="dash",
+                    line_color="orange",
+                    annotation_text=f"Pycnocline: {pycnocline['depth']:.0f}m",
+                    annotation_position="bottom right",
+                )
+
+        if mld.get('found', False):
+            fig.add_hline(
+                y=mld['depth'],
+                line_dash="dash",
+                line_color="green",
+                annotation_text=f"MLD: {mld['depth']:.0f}m",
+                annotation_position="top right",
+            )
+
+        fig.update_layout(
+            title=f'Water Column Stratification - {buoy_name}',
+            xaxis_title='Buoyancy Frequency (rad/s)',
+            yaxis_title='Depth (m)',
+            yaxis=dict(autorange='reversed'),
+            template=self.template,
+            height=600,
+        )
+
+        return fig
+
+    def create_eddy_detection_plot(self, data, eddies=None, buoy_id=None):
+        from ocean_analysis import OceanAnalyzer
+        df = self._extract_single_buoy(data, buoy_id)
+        buoy_name = df['buoy_name'].iloc[0] if 'buoy_name' in df.columns else buoy_id
+
+        analyzer = OceanAnalyzer()
+        if eddies is None:
+            eddies = analyzer.detect_eddies(df)
+
+        temp_col = 'temperature_assimilated' if 'temperature_assimilated' in df.columns else 'temperature'
+        sal_col = 'salinity_assimilated' if 'salinity_assimilated' in df.columns else 'salinity'
+
+        fig = sp.make_subplots(
+            rows=1, cols=2,
+            subplot_titles=('Temperature Anomalies', 'Salinity Anomalies'),
+            shared_yaxes=True,
+        )
+
+        temps = df[temp_col].values
+        sals = df[sal_col].values
+        depths = df['depth'].values
+
+        from scipy.ndimage import gaussian_filter1d
+        temp_smooth = gaussian_filter1d(temps, sigma=2.0)
+        sal_smooth = gaussian_filter1d(sals, sigma=2.0)
+        temp_anomaly = temps - temp_smooth
+        sal_anomaly = sals - sal_smooth
+
+        fig.add_trace(go.Scatter(
+            x=temp_anomaly,
+            y=depths,
+            mode='lines+markers',
+            name='Temp Anomaly',
+            line=dict(color='red', width=2),
+            marker=dict(size=4),
+        ), row=1, col=1)
+
+        fig.add_trace(go.Scatter(
+            x=sal_anomaly,
+            y=depths,
+            mode='lines+markers',
+            name='Sal Anomaly',
+            line=dict(color='blue', width=2),
+            marker=dict(size=4),
+        ), row=1, col=2)
+
+        for i, eddy in enumerate(eddies):
+            color = 'red' if 'warm' in eddy['type'] else 'blue'
+            fig.add_hrect(
+                y0=eddy['top_depth'],
+                y1=eddy['bottom_depth'],
+                fillcolor=color,
+                opacity=0.2,
+                layer="below",
+                line_width=0,
+                annotation_text=f"Eddy {i+1}: {eddy['type'].replace('_', ' ')}",
+                annotation_position="left",
+                row=1, col=1,
+            )
+            fig.add_hrect(
+                y0=eddy['top_depth'],
+                y1=eddy['bottom_depth'],
+                fillcolor=color,
+                opacity=0.2,
+                layer="below",
+                line_width=0,
+                row=1, col=2,
+            )
+
+        fig.add_vline(x=0, line_dash="dash", line_color="gray", row=1, col=1)
+        fig.add_vline(x=0, line_dash="dash", line_color="gray", row=1, col=2)
+
+        fig.update_layout(
+            title=f'Eddy Detection - {buoy_name} ({len(eddies)} eddies found)',
+            yaxis_title='Depth (m)',
+            yaxis=dict(autorange='reversed'),
+            template=self.template,
+            height=600,
+            showlegend=False,
+        )
+        fig.update_xaxes(title_text='Temperature Anomaly (°C)', row=1, col=1)
+        fig.update_xaxes(title_text='Salinity Anomaly (PSU)', row=1, col=2)
+
+        return fig
+
+    def create_water_masses_plot(self, data, analysis_results=None, buoy_id=None):
+        from ocean_analysis import OceanAnalyzer
+        df = self._extract_single_buoy(data, buoy_id)
+        buoy_name = df['buoy_name'].iloc[0] if 'buoy_name' in df.columns else buoy_id
+
+        analyzer = OceanAnalyzer()
+        if analysis_results is None:
+            analysis_results = analyzer.analyze_profile(df)
+
+        water_masses = analysis_results.get('water_masses', [])
+
+        fig = go.Figure()
+
+        temp_col = 'temperature_assimilated' if 'temperature_assimilated' in df.columns else 'temperature'
+        sal_col = 'salinity_assimilated' if 'salinity_assimilated' in df.columns else 'salinity'
+
+        colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD']
+
+        for i, mass in enumerate(water_masses):
+            mask = (df['depth'] >= mass['top_depth']) & (df['depth'] <= mass['bottom_depth'])
+            color = colors[i % len(colors)]
+
+            fig.add_trace(go.Scatter(
+                x=df.loc[mask, sal_col],
+                y=df.loc[mask, temp_col],
+                mode='markers',
+                name=mass['name'],
+                marker=dict(
+                    size=6,
+                    color=color,
+                ),
+                text=[f"Depth: {d:.0f}m<br>Temp: {t:.2f}°C<br>Sal: {s:.2f} PSU"
+                      for d, t, s in zip(df.loc[mask, 'depth'], df.loc[mask, temp_col], df.loc[mask, sal_col])],
+                hoverinfo='text',
+            ))
+
+        fig.update_layout(
+            title=f'Water Mass Classification - {buoy_name}',
+            xaxis_title='Salinity (PSU)',
+            yaxis_title='Temperature (°C)',
+            template=self.template,
+            height=600,
+            legend_title='Water Masses',
+        )
+
+        return fig
+
     def _extract_single_buoy(self, data, buoy_id):
         if isinstance(data, dict):
             if buoy_id:
@@ -952,3 +1246,436 @@ class OceanVisualizer:
             else:
                 return data.copy()
         return data
+
+    def generate_profile_animation(self, time_series_data, variable='temperature',
+                                    output_path='profile_animation.mp4',
+                                    fps=10, dpi=100, figsize=(10, 8)):
+        try:
+            import matplotlib
+            matplotlib.use('Agg')
+            import matplotlib.pyplot as plt
+            from matplotlib.animation import FuncAnimation
+            from matplotlib import cm
+        except ImportError:
+            print('[WARNING] matplotlib not available, cannot generate MP4 animation')
+            return None
+
+        if not time_series_data or len(time_series_data) < 2:
+            print('[WARNING] Insufficient time series data for animation')
+            return None
+
+        first_df = self._extract_single_buoy(time_series_data[0], None)
+        buoy_name = first_df['buoy_name'].iloc[0] if 'buoy_name' in first_df.columns else 'Buoy'
+
+        all_depths = first_df['depth'].values
+        max_depth = all_depths.max()
+
+        all_values = []
+        all_times = []
+        for i, ts_data in enumerate(time_series_data):
+            df = self._extract_single_buoy(ts_data, None)
+            if 'timestamp' in df.columns:
+                all_times.append(str(df['timestamp'].iloc[0]))
+            else:
+                all_times.append(f'Time Step {i + 1}')
+
+            if variable + '_assimilated' in df.columns:
+                all_values.append(df[variable + '_assimilated'].values)
+            else:
+                all_values.append(df[variable].values)
+
+        all_values = np.array(all_values)
+
+        fig, ax = plt.subplots(figsize=figsize)
+        line, = ax.plot([], [], 'b-', linewidth=2, label=variable.capitalize())
+        time_text = ax.text(0.02, 0.95, '', transform=ax.transAxes,
+                            fontsize=12, verticalalignment='top',
+                            bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.8))
+
+        if variable == 'temperature':
+            color = 'red'
+            xlabel = 'Temperature (°C)'
+            cmap = cm.thermal
+        elif variable == 'salinity':
+            color = 'blue'
+            xlabel = 'Salinity (PSU)'
+            cmap = cm.viridis
+        else:
+            color = 'green'
+            xlabel = variable.capitalize()
+            cmap = cm.cividis
+
+        line.set_color(color)
+
+        ax.set_xlabel(xlabel, fontsize=12)
+        ax.set_ylabel('Depth (m)', fontsize=12)
+        ax.set_title(f'{variable.capitalize()} Profile Evolution - {buoy_name}', fontsize=14)
+        ax.invert_yaxis()
+        ax.grid(True, alpha=0.3)
+        ax.legend(loc='lower right')
+
+        vmin = np.nanmin(all_values)
+        vmax = np.nanmax(all_values)
+        x_margin = (vmax - vmin) * 0.1 if vmax != vmin else 1.0
+        ax.set_xlim(vmin - x_margin, vmax + x_margin)
+        ax.set_ylim(max_depth, 0)
+
+        def init():
+            line.set_data([], [])
+            time_text.set_text('')
+            return line, time_text
+
+        def update(frame):
+            line.set_data(all_values[frame], all_depths)
+            time_text.set_text(f'Time: {all_times[frame]}')
+            return line, time_text
+
+        anim = FuncAnimation(
+            fig, update, frames=len(time_series_data),
+            init_func=init, blit=True, interval=1000 / fps
+        )
+
+        try:
+            anim.save(output_path, writer='ffmpeg', fps=fps, dpi=dpi, bitrate=2000)
+            print(f'[OK] Animation saved to: {output_path}')
+        except Exception as e:
+            try:
+                anim.save(output_path, writer='pillow', fps=fps, dpi=dpi)
+                print(f'[OK] Animation saved (GIF): {output_path}')
+            except Exception as e2:
+                print(f'[ERROR] Failed to save animation: {e}, {e2}')
+                plt.close(fig)
+                return None
+
+        plt.close(fig)
+        return output_path
+
+    def generate_ts_diagram_animation(self, time_series_data,
+                                       output_path='ts_animation.mp4',
+                                       fps=10, dpi=100, figsize=(10, 8)):
+        try:
+            import matplotlib
+            matplotlib.use('Agg')
+            import matplotlib.pyplot as plt
+            from matplotlib.animation import FuncAnimation
+            from matplotlib import cm
+        except ImportError:
+            print('[WARNING] matplotlib not available, cannot generate MP4 animation')
+            return None
+
+        if not time_series_data or len(time_series_data) < 2:
+            print('[WARNING] Insufficient time series data for animation')
+            return None
+
+        first_df = self._extract_single_buoy(time_series_data[0], None)
+        buoy_name = first_df['buoy_name'].iloc[0] if 'buoy_name' in first_df.columns else 'Buoy'
+
+        all_temps = []
+        all_sals = []
+        all_depths = []
+        all_times = []
+
+        for i, ts_data in enumerate(time_series_data):
+            df = self._extract_single_buoy(ts_data, None)
+            if 'timestamp' in df.columns:
+                all_times.append(str(df['timestamp'].iloc[0]))
+            else:
+                all_times.append(f'Time Step {i + 1}')
+
+            temp_col = 'temperature_assimilated' if 'temperature_assimilated' in df.columns else 'temperature'
+            sal_col = 'salinity_assimilated' if 'salinity_assimilated' in df.columns else 'salinity'
+
+            all_temps.append(df[temp_col].values)
+            all_sals.append(df[sal_col].values)
+            all_depths.append(df['depth'].values)
+
+        all_temps = np.array(all_temps)
+        all_sals = np.array(all_sals)
+        depths_ref = all_depths[0]
+
+        fig, ax = plt.subplots(figsize=figsize)
+
+        scatter = ax.scatter([], [], c=[], cmap=cm.viridis, s=30, alpha=0.7)
+
+        time_text = ax.text(0.02, 0.95, '', transform=ax.transAxes,
+                            fontsize=12, verticalalignment='top',
+                            bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.8))
+
+        cbar = plt.colorbar(scatter, ax=ax)
+        cbar.set_label('Depth (m)')
+
+        ax.set_xlabel('Salinity (PSU)', fontsize=12)
+        ax.set_ylabel('Temperature (°C)', fontsize=12)
+        ax.set_title(f'T-S Diagram Evolution - {buoy_name}', fontsize=14)
+        ax.grid(True, alpha=0.3)
+
+        x_min, x_max = np.nanmin(all_sals), np.nanmax(all_sals)
+        y_min, y_max = np.nanmin(all_temps), np.nanmax(all_temps)
+        x_margin = (x_max - x_min) * 0.1 if x_max != x_min else 1.0
+        y_margin = (y_max - y_min) * 0.1 if y_max != y_min else 1.0
+        ax.set_xlim(x_min - x_margin, x_max + x_margin)
+        ax.set_ylim(y_min - y_margin, y_max + y_margin)
+
+        def init():
+            scatter.set_offsets(np.column_stack(([], [])))
+            scatter.set_array(np.array([]))
+            time_text.set_text('')
+            return scatter, time_text
+
+        def update(frame):
+            pts = np.column_stack((all_sals[frame], all_temps[frame]))
+            scatter.set_offsets(pts)
+            scatter.set_array(depths_ref)
+            time_text.set_text(f'Time: {all_times[frame]}')
+            return scatter, time_text
+
+        anim = FuncAnimation(
+            fig, update, frames=len(time_series_data),
+            init_func=init, blit=False, interval=1000 / fps
+        )
+
+        try:
+            anim.save(output_path, writer='ffmpeg', fps=fps, dpi=dpi, bitrate=2000)
+            print(f'[OK] T-S animation saved to: {output_path}')
+        except Exception as e:
+            try:
+                anim.save(output_path, writer='pillow', fps=fps, dpi=dpi)
+                print(f'[OK] T-S animation saved (GIF): {output_path}')
+            except Exception as e2:
+                print(f'[ERROR] Failed to save T-S animation: {e}, {e2}')
+                plt.close(fig)
+                return None
+
+        plt.close(fig)
+        return output_path
+
+    def generate_multi_panel_animation(self, time_series_data,
+                                       output_path='multi_panel_animation.mp4',
+                                       fps=10, dpi=100, figsize=(14, 10)):
+        try:
+            import matplotlib
+            matplotlib.use('Agg')
+            import matplotlib.pyplot as plt
+            from matplotlib.animation import FuncAnimation
+            from matplotlib import cm
+        except ImportError:
+            print('[WARNING] matplotlib not available, cannot generate MP4 animation')
+            return None
+
+        if not time_series_data or len(time_series_data) < 2:
+            print('[WARNING] Insufficient time series data for animation')
+            return None
+
+        first_df = self._extract_single_buoy(time_series_data[0], None)
+        buoy_name = first_df['buoy_name'].iloc[0] if 'buoy_name' in first_df.columns else 'Buoy'
+
+        all_temps = []
+        all_sals = []
+        all_speeds = []
+        all_depths = []
+        all_times = []
+
+        for i, ts_data in enumerate(time_series_data):
+            df = self._extract_single_buoy(ts_data, None)
+            if 'timestamp' in df.columns:
+                all_times.append(str(df['timestamp'].iloc[0]))
+            else:
+                all_times.append(f'Time Step {i + 1}')
+
+            temp_col = 'temperature_assimilated' if 'temperature_assimilated' in df.columns else 'temperature'
+            sal_col = 'salinity_assimilated' if 'salinity_assimilated' in df.columns else 'salinity'
+
+            all_temps.append(df[temp_col].values)
+            all_sals.append(df[sal_col].values)
+            all_speeds.append(df['current_speed'].values if 'current_speed' in df.columns else np.zeros(len(df)))
+            all_depths.append(df['depth'].values)
+
+        all_temps = np.array(all_temps)
+        all_sals = np.array(all_sals)
+        all_speeds = np.array(all_speeds)
+        depths_ref = all_depths[0]
+        max_depth = depths_ref.max()
+
+        fig = plt.figure(figsize=figsize)
+        gs = fig.add_gridspec(2, 2, hspace=0.3, wspace=0.3)
+
+        ax1 = fig.add_subplot(gs[0, 0])
+        ax2 = fig.add_subplot(gs[0, 1])
+        ax3 = fig.add_subplot(gs[1, 0])
+        ax4 = fig.add_subplot(gs[1, 1])
+
+        line1, = ax1.plot([], [], 'r-', linewidth=2)
+        line2, = ax2.plot([], [], 'b-', linewidth=2)
+        line3, = ax3.plot([], [], 'g-', linewidth=2)
+        scatter4 = ax4.scatter([], [], c=[], cmap=cm.viridis, s=20, alpha=0.7)
+
+        time_text = fig.text(0.5, 0.95, '', ha='center', fontsize=14,
+                             bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.8))
+
+        ax1.set_xlabel('Temperature (°C)')
+        ax1.set_ylabel('Depth (m)')
+        ax1.set_title('Temperature Profile')
+        ax1.invert_yaxis()
+        ax1.grid(True, alpha=0.3)
+
+        ax2.set_xlabel('Salinity (PSU)')
+        ax2.set_ylabel('Depth (m)')
+        ax2.set_title('Salinity Profile')
+        ax2.invert_yaxis()
+        ax2.grid(True, alpha=0.3)
+
+        ax3.set_xlabel('Current Speed (m/s)')
+        ax3.set_ylabel('Depth (m)')
+        ax3.set_title('Current Speed Profile')
+        ax3.invert_yaxis()
+        ax3.grid(True, alpha=0.3)
+
+        ax4.set_xlabel('Salinity (PSU)')
+        ax4.set_ylabel('Temperature (°C)')
+        ax4.set_title('T-S Diagram')
+        ax4.grid(True, alpha=0.3)
+        cbar = plt.colorbar(scatter4, ax=ax4)
+        cbar.set_label('Depth (m)')
+
+        t_min, t_max = np.nanmin(all_temps), np.nanmax(all_temps)
+        s_min, s_max = np.nanmin(all_sals), np.nanmax(all_sals)
+        sp_min, sp_max = np.nanmin(all_speeds), np.nanmax(all_speeds)
+
+        ax1.set_xlim(t_min - 0.5, t_max + 0.5)
+        ax1.set_ylim(max_depth, 0)
+        ax2.set_xlim(s_min - 0.2, s_max + 0.2)
+        ax2.set_ylim(max_depth, 0)
+        ax3.set_xlim(max(0, sp_min - 0.1), sp_max + 0.1)
+        ax3.set_ylim(max_depth, 0)
+        ax4.set_xlim(s_min - 0.2, s_max + 0.2)
+        ax4.set_ylim(t_min - 0.5, t_max + 0.5)
+
+        fig.suptitle(f'Ocean Data Evolution - {buoy_name}', fontsize=16, y=0.98)
+
+        def init():
+            line1.set_data([], [])
+            line2.set_data([], [])
+            line3.set_data([], [])
+            scatter4.set_offsets(np.column_stack(([], [])))
+            scatter4.set_array(np.array([]))
+            time_text.set_text('')
+            return line1, line2, line3, scatter4, time_text
+
+        def update(frame):
+            line1.set_data(all_temps[frame], depths_ref)
+            line2.set_data(all_sals[frame], depths_ref)
+            line3.set_data(all_speeds[frame], depths_ref)
+            pts = np.column_stack((all_sals[frame], all_temps[frame]))
+            scatter4.set_offsets(pts)
+            scatter4.set_array(depths_ref)
+            time_text.set_text(f'Time: {all_times[frame]}')
+            return line1, line2, line3, scatter4, time_text
+
+        anim = FuncAnimation(
+            fig, update, frames=len(time_series_data),
+            init_func=init, blit=False, interval=1000 / fps
+        )
+
+        try:
+            anim.save(output_path, writer='ffmpeg', fps=fps, dpi=dpi, bitrate=2500)
+            print(f'[OK] Multi-panel animation saved to: {output_path}')
+        except Exception as e:
+            try:
+                anim.save(output_path, writer='pillow', fps=fps, dpi=dpi)
+                print(f'[OK] Multi-panel animation saved (GIF): {output_path}')
+            except Exception as e2:
+                print(f'[ERROR] Failed to save multi-panel animation: {e}, {e2}')
+                plt.close(fig)
+                return None
+
+        plt.close(fig)
+        return output_path
+
+    def generate_buoy_map_animation(self, time_series_surface_data, buoy_list,
+                                     output_path='buoy_map_animation.mp4',
+                                     fps=5, dpi=100, figsize=(12, 8)):
+        try:
+            import matplotlib
+            matplotlib.use('Agg')
+            import matplotlib.pyplot as plt
+            from matplotlib.animation import FuncAnimation
+            from matplotlib import cm
+        except ImportError:
+            print('[WARNING] matplotlib not available, cannot generate MP4 animation')
+            return None
+
+        if not time_series_surface_data or len(time_series_surface_data) < 2:
+            print('[WARNING] Insufficient time series data for animation')
+            return None
+
+        all_times = []
+        all_temps = []
+        all_sals = []
+
+        for i, data in enumerate(time_series_surface_data):
+            all_times.append(f'Time Step {i + 1}')
+            if isinstance(data, list):
+                all_temps.append([d.get('surface_temperature', 0) for d in data])
+                all_sals.append([d.get('surface_salinity', 0) for d in data])
+            else:
+                all_temps.append(data if isinstance(data, list) else [data])
+                all_sals.append(data if isinstance(data, list) else [data])
+
+        lats = [b['lat'] for b in buoy_list]
+        lons = [b['lon'] for b in buoy_list]
+
+        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=figsize)
+
+        scatter1 = ax1.scatter(lons, lats, c=all_temps[0], cmap=cm.thermal, s=100, edgecolors='black')
+        scatter2 = ax2.scatter(lons, lats, c=all_sals[0], cmap=cm.viridis, s=100, edgecolors='black')
+
+        cbar1 = plt.colorbar(scatter1, ax=ax1)
+        cbar1.set_label('SST (°C)')
+        cbar2 = plt.colorbar(scatter2, ax=ax2)
+        cbar2.set_label('SSS (PSU)')
+
+        ax1.set_xlabel('Longitude')
+        ax1.set_ylabel('Latitude')
+        ax1.set_title('Sea Surface Temperature')
+        ax1.grid(True, alpha=0.3)
+
+        ax2.set_xlabel('Longitude')
+        ax2.set_ylabel('Latitude')
+        ax2.set_title('Sea Surface Salinity')
+        ax2.grid(True, alpha=0.3)
+
+        time_text = fig.text(0.5, 0.95, '', ha='center', fontsize=14,
+                             bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.8))
+
+        t_min, t_max = np.min(all_temps), np.max(all_temps)
+        s_min, s_max = np.min(all_sals), np.max(all_sals)
+        scatter1.set_clim(t_min, t_max)
+        scatter2.set_clim(s_min, s_max)
+
+        fig.suptitle('Global Buoy Surface Data Evolution', fontsize=16, y=0.98)
+
+        def update(frame):
+            scatter1.set_array(np.array(all_temps[frame]))
+            scatter2.set_array(np.array(all_sals[frame]))
+            time_text.set_text(f'Time: {all_times[frame]}')
+            return scatter1, scatter2, time_text
+
+        anim = FuncAnimation(
+            fig, update, frames=len(time_series_surface_data),
+            blit=False, interval=1000 / fps
+        )
+
+        try:
+            anim.save(output_path, writer='ffmpeg', fps=fps, dpi=dpi, bitrate=2000)
+            print(f'[OK] Buoy map animation saved to: {output_path}')
+        except Exception as e:
+            try:
+                anim.save(output_path, writer='pillow', fps=fps, dpi=dpi)
+                print(f'[OK] Buoy map animation saved (GIF): {output_path}')
+            except Exception as e2:
+                print(f'[ERROR] Failed to save buoy map animation: {e}, {e2}')
+                plt.close(fig)
+                return None
+
+        plt.close(fig)
+        return output_path

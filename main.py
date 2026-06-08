@@ -2,6 +2,7 @@ import os
 import sys
 import time
 import json
+import numpy as np
 import pandas as pd
 from datetime import datetime
 from config import OUTPUT_DIR, DATA_DIR, BUOY_CONFIG
@@ -9,6 +10,7 @@ from data_acquisition import BuoyDataFetcher
 from quality_control import QualityController
 from visualization import OceanVisualizer
 from alerts import AlertManager
+from ocean_analysis import OceanAnalyzer
 
 
 class DataExporter:
@@ -54,6 +56,19 @@ class DataExporter:
             fig.write_image(filepath)
         elif fmt == 'svg':
             fig.write_image(filepath)
+        return filepath
+
+    def export_animation(self, animation_data, filename, fmt='mp4'):
+        filepath = os.path.join(self.output_dir, filename)
+        if isinstance(animation_data, str):
+            import shutil
+            shutil.copy2(animation_data, filepath)
+        return filepath
+
+    def export_analysis_results(self, analysis_results, filename):
+        filepath = os.path.join(self.output_dir, filename)
+        with open(filepath, 'w') as f:
+            json.dump(analysis_results, f, indent=2, default=str)
         return filepath
 
     def export_full_report(self, data, quality_summary, alerts_summary, buoy_id=None):
@@ -125,6 +140,39 @@ class DataExporter:
             html_3d_dashboard = self.export_figure(fig_3d_dashboard, f"{report_name}_3d_dashboard.html")
             results['3d_dashboard'] = html_3d_dashboard
 
+            analyzer = OceanAnalyzer()
+            analysis_results = analyzer.analyze_profile(df)
+            if analysis_results:
+                analysis_path = self.export_analysis_results(
+                    analysis_results,
+                    f"{report_name}_analysis_results.json"
+                )
+                results['analysis_results'] = analysis_path
+
+                thermo_fig = visualizer.create_thermocline_plot(df, analysis_results)
+                thermo_html = self.export_figure(thermo_fig, f"{report_name}_thermocline.html")
+                results['thermocline_plot'] = thermo_html
+
+                halo_fig = visualizer.create_halocline_plot(df, analysis_results)
+                halo_html = self.export_figure(halo_fig, f"{report_name}_halocline.html")
+                results['halocline_plot'] = halo_html
+
+                strat_fig = visualizer.create_stratification_plot(df, analysis_results)
+                strat_html = self.export_figure(strat_fig, f"{report_name}_stratification.html")
+                results['stratification_plot'] = strat_html
+
+                eddies = analyzer.detect_eddies(df)
+                if eddies:
+                    eddy_fig = visualizer.create_eddy_detection_plot(df, eddies)
+                    eddy_html = self.export_figure(eddy_fig, f"{report_name}_eddy_detection.html")
+                    results['eddy_detection_plot'] = eddy_html
+
+                water_masses = analysis_results.get('water_masses', [])
+                if water_masses:
+                    wm_fig = visualizer.create_water_masses_plot(df, analysis_results)
+                    wm_html = self.export_figure(wm_fig, f"{report_name}_water_masses.html")
+                    results['water_masses_plot'] = wm_html
+
         if quality_summary:
             qc_path = self.export_quality_report(quality_summary, f"{report_name}_quality_report.json")
             results['quality_report'] = qc_path
@@ -141,11 +189,13 @@ class OceanBuoySystem:
         self.quality_controller = QualityController(assimilation_method=assimilation_method)
         self.visualizer = OceanVisualizer()
         self.alert_manager = AlertManager()
+        self.analyzer = OceanAnalyzer()
         self.exporter = DataExporter()
 
         self.current_data = None
         self.current_qc_data = None
         self.quality_summary = None
+        self.analysis_results = None
         self.mode = 'offline'
         self.assimilation_method = assimilation_method
 
@@ -180,6 +230,10 @@ class OceanBuoySystem:
             print(f"Generated {len(alerts)} alert(s)")
         else:
             print("No alerts triggered")
+
+        print("\nRunning ocean analysis...")
+        self.analysis_results = self._run_ocean_analysis()
+        self._print_analysis_summary()
 
         print("\nGenerating visualizations...")
         self._show_dashboard_preview()
@@ -268,6 +322,117 @@ class OceanBuoySystem:
         print(f"{prefix}Bad: {summary['bad_count']} ({summary['bad_percentage']}%)")
         if 'assimilated_count' in summary:
             print(f"{prefix}Assimilated: {summary['assimilated_count']}")
+
+    def _run_ocean_analysis(self):
+        results = {}
+        if isinstance(self.current_qc_data, dict):
+            for buoy_id, df in self.current_qc_data.items():
+                results[buoy_id] = self.analyzer.analyze_profile(df)
+        else:
+            results['default'] = self.analyzer.analyze_profile(self.current_qc_data)
+        return results
+
+    def _print_analysis_summary(self):
+        if not self.analysis_results:
+            print("  No analysis results available")
+            return
+
+        for buoy_id, results in self.analysis_results.items():
+            summary = self.analyzer.get_analysis_dict(results)
+            print(f"\n  Buoy {buoy_id}:")
+            if summary['thermocline']['found']:
+                print(f"    Thermocline: {summary['thermocline']['depth']:.0f}m ({summary['thermocline']['strength']})")
+            else:
+                print(f"    Thermocline: not found")
+            if summary['halocline']['found']:
+                print(f"    Halocline: {summary['halocline']['depth']:.0f}m ({summary['halocline']['strength']})")
+            else:
+                print(f"    Halocline: not found")
+            if summary['pycnocline']['found']:
+                print(f"    Pycnocline: {summary['pycnocline']['depth']:.0f}m")
+            if summary['mixed_layer_depth']['found']:
+                print(f"    Mixed Layer Depth: {summary['mixed_layer_depth']['depth']:.0f}m")
+            print(f"    Eddies detected: {summary['eddies_count']}")
+            print(f"    Water masses: {summary['water_masses_count']}")
+
+    def detect_thermocline(self, buoy_id=None):
+        if buoy_id and isinstance(self.current_qc_data, dict):
+            df = self.current_qc_data.get(buoy_id)
+            if df is not None:
+                return self.analyzer.detect_thermocline(df)
+        elif isinstance(self.current_qc_data, dict):
+            first_buoy = list(self.current_qc_data.keys())[0]
+            return self.analyzer.detect_thermocline(self.current_qc_data[first_buoy])
+        elif self.current_qc_data is not None:
+            return self.analyzer.detect_thermocline(self.current_qc_data)
+        return None
+
+    def detect_eddies(self, buoy_id=None):
+        if buoy_id and isinstance(self.current_qc_data, dict):
+            df = self.current_qc_data.get(buoy_id)
+            if df is not None:
+                return self.analyzer.detect_eddies(df)
+        elif isinstance(self.current_qc_data, dict):
+            first_buoy = list(self.current_qc_data.keys())[0]
+            return self.analyzer.detect_eddies(self.current_qc_data[first_buoy])
+        elif self.current_qc_data is not None:
+            return self.analyzer.detect_eddies(self.current_qc_data)
+        return None
+
+    def generate_profile_animation(self, buoy_id=None, variable='temperature',
+                                    output_path=None, fps=10):
+        if output_path is None:
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            output_path = os.path.join(self.exporter.output_dir,
+                                        f"profile_animation_{timestamp}.mp4")
+
+        time_series_data = self._generate_demo_time_series(buoy_id)
+        if time_series_data is None:
+            return None
+
+        return self.visualizer.generate_profile_animation(
+            time_series_data, variable=variable, output_path=output_path, fps=fps
+        )
+
+    def generate_multi_panel_animation(self, buoy_id=None, output_path=None, fps=10):
+        if output_path is None:
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            output_path = os.path.join(self.exporter.output_dir,
+                                        f"multi_panel_animation_{timestamp}.mp4")
+
+        time_series_data = self._generate_demo_time_series(buoy_id)
+        if time_series_data is None:
+            return None
+
+        return self.visualizer.generate_multi_panel_animation(
+            time_series_data, output_path=output_path, fps=fps
+        )
+
+    def _generate_demo_time_series(self, buoy_id=None, num_steps=10):
+        if buoy_id and isinstance(self.current_qc_data, dict):
+            df = self.current_qc_data.get(buoy_id)
+        elif isinstance(self.current_qc_data, dict):
+            first_buoy = list(self.current_qc_data.keys())[0]
+            df = self.current_qc_data[first_buoy]
+        else:
+            df = self.current_qc_data
+
+        if df is None:
+            return None
+
+        time_series = []
+        temp_col = 'temperature_assimilated' if 'temperature_assimilated' in df.columns else 'temperature'
+        sal_col = 'salinity_assimilated' if 'salinity_assimilated' in df.columns else 'salinity'
+
+        for i in range(num_steps):
+            df_copy = df.copy()
+            phase = 2 * np.pi * i / num_steps
+            df_copy[temp_col] = df[temp_col] + 0.5 * np.sin(phase) * (1 - df['depth'] / df['depth'].max())
+            df_copy[sal_col] = df[sal_col] + 0.1 * np.sin(phase + np.pi/4) * (1 - df['depth'] / df['depth'].max())
+            df_copy['timestamp'] = pd.Timestamp.now() + pd.Timedelta(hours=i*6)
+            time_series.append(df_copy)
+
+        return time_series
 
     def _show_dashboard_preview(self):
         if isinstance(self.current_qc_data, dict):

@@ -1,0 +1,142 @@
+{
+  "46001": {
+    "total_points": 100,
+    "good_count": "98",
+    "suspect_count": "2",
+    "bad_count": "0",
+    "missing_count": "0",
+    "assimilated_count": "2",
+    "good_percentage": 98.0,
+    "suspect_percentage": 2.0,
+    "bad_percentage": 0.0,
+    "assimilation_stats": {
+      "mean_confidence": 1.0
+    }
+  },
+  "46002": {
+    "total_points": 100,
+    "good_count": "98",
+    "suspect_count": "2",
+    "bad_count": "0",
+    "missing_count": "0",
+    "assimilated_count": "2",
+    "good_percentage": 98.0,
+    "suspect_percentage": 2.0,
+    "bad_percentage": 0.0,
+    "assimilation_stats": {
+      "mean_confidence": 1.0
+    }
+  },
+  "41001": {
+    "total_points": 100,
+    "good_count": "99",
+    "suspect_count": "1",
+    "bad_count": "0",
+    "missing_count": "0",
+    "assimilated_count": "1",
+    "good_percentage": 99.0,
+    "suspect_percentage": 1.0,
+    "bad_percentage": 0.0,
+    "assimilation_stats": {
+      "mean_confidence": 1.0
+    }
+  },
+  "42001": {
+    "total_points": 100,
+    "good_count": "100",
+    "suspect_count": "0",
+    "bad_count": "0",
+    "missing_count": "0",
+    "assimilated_count": "0",
+    "good_percentage": 100.0,
+    "suspect_percentage": 0.0,
+    "bad_percentage": 0.0,
+    "assimilation_stats": {
+      "mean_confidence": 1.0
+    }
+  },
+  "44004": {
+    "total_points": 100,
+    "good_count": "99",
+    "suspect_count": "1",
+    "bad_count": "0",
+    "missing_count": "0",
+    "assimilated_count": "1",
+    "good_percentage": 99.0,
+    "suspect_percentage": 1.0,
+    "bad_percentage": 0.0,
+    "assimilation_stats": {
+      "mean_confidence": 1.0
+    }
+  },
+  "44007": {
+    "total_points": 100,
+    "good_count": "95",
+    "suspect_count": "5",
+    "bad_count": "0",
+    "missing_count": "0",
+    "assimilated_count": "5",
+    "good_percentage": 95.0,
+    "suspect_percentage": 5.0,
+    "bad_percentage": 0.0,
+    "assimilation_stats": {
+      "mean_confidence": 1.0
+    }
+  },
+  "46006": {
+    "total_points": 100,
+    "good_count": "94",
+    "suspect_count": "6",
+    "bad_count": "0",
+    "missing_count": "0",
+    "assimilated_count": "6",
+    "good_percentage": 94.0,
+    "suspect_percentage": 6.0,
+    "bad_percentage": 0.0,
+    "assimilation_stats": {
+      "mean_confidence": 1.0
+    }
+  },
+  "46012": {
+    "total_points": 100,
+    "good_count": "93",
+    "suspect_count": "7",
+    "bad_count": "0",
+    "missing_count": "0",
+    "assimilated_count": "7",
+    "good_percentage": 93.0,
+    "suspect_percentage": 7.0,
+    "bad_percentage": 0.0,
+    "assimilation_stats": {
+      "mean_confidence": 1.0
+    }
+  },
+  "41046": {
+    "total_points": 100,
+    "good_count": "97",
+    "suspect_count": "3",
+    "bad_count": "0",
+    "missing_count": "0",
+    "assimilated_count": "3",
+    "good_percentage": 97.0,
+    "suspect_percentage": 3.0,
+    "bad_percentage": 0.0,
+    "assimilation_stats": {
+      "mean_confidence": 1.0
+    }
+  },
+  "42039": {
+    "total_points": 100,
+    "good_count": "100",
+    "suspect_count": "0",
+    "bad_count": "0",
+    "missing_count": "0",
+    "assimilated_count": "0",
+    "good_percentage": 100.0,
+    "suspect_percentage": 0.0,
+    "bad_percentage": 0.0,
+    "assimilation_stats": {
+      "mean_confidence": 1.0
+    }
+  }
+}
